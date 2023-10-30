@@ -1,0 +1,16 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "VideoUploadApplication",
+      "request": "launch",
+      "mainClass": "com.example.videoupload.VideoUploadApplication",
+      "projectName": "video-upload",
+      "env": {
+        "AWS_REGION": "ap-southeast-2",
+        "AWS_ACCESS_KEY_ID": "AKIAUBKTRWRI7PJUFDQV",
+        "AWS_SECRET_ACCESS_KEY": "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"
+      }
+    }
+  ]
+}
