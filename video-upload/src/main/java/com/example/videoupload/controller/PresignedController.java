@@ -20,7 +20,7 @@ public class PresignedController {
     @CrossOrigin(origins = "http://localhost:3000")
     @GetMapping("/presigned")
     public ResponseEntity<URL> getPresignedUrl() {
-        URL url = presignedService.createSignedUrlForStringPut("toktik-bucket", UUID.randomUUID().toString());
+        URL url = presignedService.createSignedUrlForStringPut("toktik-bucket",  UUID.randomUUID().toString());
 
         return ResponseEntity.ok(url);
     }
