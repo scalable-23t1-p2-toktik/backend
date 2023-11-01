@@ -85,7 +85,8 @@ public class VideoStreamService {
             while ((line = reader.readLine()) != null) {
                 if (line.endsWith(".ts")) {
                     // Get a presigned url for the chunks and replace it with the original chunk name
-                    String presigned = getPresignUrl("test/" + line).toString();
+                    // TODO: Parse in the name of the UUID folder of the chunks (Still hard coded)
+                    String presigned = getPresignUrl("hls/7a320af5-f079-46b4-a611-975115bedf67/" + line).toString();
                     line = presigned;
 
                     // line = "new_" + line;
