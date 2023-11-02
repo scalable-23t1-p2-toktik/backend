@@ -76,7 +76,7 @@ public class VideoStreamService {
         return uploadResult.response().eTag();
     }
 
-    public void modifyM3u8(String m3u8) {
+    public void modifyM3u8(String m3u8, String key) {
         try (S3Presigner presigner = S3Presigner.create()) {
             BufferedReader reader = new BufferedReader(new FileReader(m3u8));
             List<String> lines = new ArrayList<>();
@@ -86,7 +86,7 @@ public class VideoStreamService {
                 if (line.endsWith(".ts")) {
                     // Get a presigned url for the chunks and replace it with the original chunk name
                     // TODO: Parse in the name of the UUID folder of the chunks (Still hard coded)
-                    String presigned = getPresignUrl("hls/7a320af5-f079-46b4-a611-975115bedf67/" + line).toString();
+                    String presigned = getPresignUrl("hls/" + key + "/" + line).toString();
                     line = presigned;
 
                     // line = "new_" + line;

@@ -40,7 +40,7 @@ public class VideoStreamController {
     public ResponseEntity<String> download(@PathVariable String key) {
         S3TransferManager transferManager = S3TransferManager.create();
         try {
-            Long contentLength = videoStreamService.downloadFile(transferManager,"toktik-bucket", key + ".m3u8", "playlist/" + key + ".m3u8");
+            Long contentLength = videoStreamService.downloadFile(transferManager,"toktik-bucket", "hls/" + key + "/playlist.m3u8", "playlist/playlist.m3u8");
             return ResponseEntity.ok("File downloaded. Content length: " + contentLength);
         } catch (Exception e) {
             e.printStackTrace();
@@ -92,7 +92,7 @@ public class VideoStreamController {
             }
 
             // Return the presigned url of the modified m3u8 file
-            String result = videoStreamService.getPresignUrl(key + ".m3u8").toString();
+            String result = videoStreamService.getPresignUrl("playlist.m3u8").toString();
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -103,12 +103,12 @@ public class VideoStreamController {
 
     // TODO: Parse in the UUID name of the folder of the chuncks (Still hard coded)
     private Long downloadM3u8File(S3TransferManager transferManager, String key) {
-        return videoStreamService.downloadFile(transferManager, "toktik-bucket", "hls/7a320af5-f079-46b4-a611-975115bedf67/" + key + ".m3u8", "playlist/" + key + ".m3u8");
+        return videoStreamService.downloadFile(transferManager, "toktik-bucket", "hls/" + key + "/playlist.m3u8", "playlist/playlist.m3u8");
     }
 
     private boolean modifyM3u8File(String key) {
         try {
-            videoStreamService.modifyM3u8("playlist/" + key + ".m3u8");
+            videoStreamService.modifyM3u8("playlist/playlist.m3u8", key);
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -117,12 +117,19 @@ public class VideoStreamController {
     }
 
     private String uploadModifiedM3u8File(S3TransferManager transferManager, String key) {
-        return videoStreamService.uploadFile(transferManager, "toktik-bucket", key + ".m3u8", "playlist/" + key + ".m3u8");
+        return videoStreamService.uploadFile(transferManager, "toktik-bucket", "playlist.m3u8", "playlist/playlist.m3u8");
     }
 
     private boolean deleteM3u8File(String key) {
-        File file = new File("playlist/" + key + ".m3u8");
+        File file = new File("playlist/playlist.m3u8");
         return file.delete();
+    }
+
+    @CrossOrigin(origins = "http://localhost:3000")
+    @GetMapping("/thumbnail/{key}")
+    public ResponseEntity<String> getThumbnail(@PathVariable String key) {
+
+        return ResponseEntity.ok(videoStreamService.getPresignUrl("hls/" + key + "/thumbnail.jpg").toString());
     }
 
 }

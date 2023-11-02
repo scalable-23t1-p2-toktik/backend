@@ -1,6 +1,8 @@
 package com.example.videoupload.controller;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,4 +60,11 @@ public class PresignedController {
         return ResponseEntity.ok().build();
     }
     
+
+    @CrossOrigin(origins = "http://localhost:3000")
+    @GetMapping("/playlist")
+    public ResponseEntity<List<Video>> getPlaylist() {
+        
+        return ResponseEntity.ok(videoRepository.findByStatus("200"));
+    }
 }

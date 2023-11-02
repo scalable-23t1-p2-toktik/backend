@@ -21,6 +21,8 @@ public class Video {
     @Column(unique = true)
     private String uuidName;
 
+    public Video() {}
+
     public Video(String username, String originalName, String uuidName) {
         this.username = username;
         this.originalName = originalName;
