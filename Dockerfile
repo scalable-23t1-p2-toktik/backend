@@ -9,13 +9,13 @@ COPY video-upload/src ./src
 RUN mvn clean package
 
 
-FROM openjdk:11
+FROM openjdk:17
 
 
 WORKDIR /app
 
 
-COPY --from=build /app/target/video-upload-1.0.jar ./app.jar
+COPY --from=build /app/target/video-upload-0.0.1-SNAPSHOT.jar ./app.jar
 
 
 EXPOSE 8080
