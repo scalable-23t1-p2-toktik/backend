@@ -15,7 +15,7 @@ FROM openjdk:11
 WORKDIR /app
 
 
-COPY --from=build /app/target/ums-1.0.jar ./app.jar
+COPY --from=build /app/target/video-upload-1.0.jar ./app.jar
 
 
 EXPOSE 8080
