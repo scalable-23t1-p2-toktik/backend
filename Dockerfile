@@ -9,7 +9,7 @@ COPY video-upload/src ./src
 RUN mvn clean package
 
 
-FROM openjdk:11
+FROM openjdk:17
 
 
 WORKDIR /app
