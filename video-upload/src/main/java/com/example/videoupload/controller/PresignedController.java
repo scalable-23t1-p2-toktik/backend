@@ -38,7 +38,7 @@ public class PresignedController {
 
     Jedis jedis = new Jedis(hostname, port);
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin
     @GetMapping("/presigned")
     public ResponseEntity<UploadTicket> getPresignedUrl() {
 
@@ -50,7 +50,7 @@ public class PresignedController {
         return ResponseEntity.ok(ticket);
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin
     @GetMapping("/notify/{username}/{originalVideo}/{videoUUID}")
     public ResponseEntity<String> notifyDoneUpload(
         @PathVariable String username, @PathVariable String originalVideo, @PathVariable String videoUUID) {
@@ -69,7 +69,7 @@ public class PresignedController {
     }
     
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin
     @GetMapping("/playlist")
     public ResponseEntity<List<Video>> getPlaylist() {
 
