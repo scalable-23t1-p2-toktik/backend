@@ -3,8 +3,12 @@ package com.example.videoupload.service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import com.example.videoupload.model.Video;
 import com.example.videoupload.repository.VideoRepository;
+
+import io.github.cdimascio.dotenv.Dotenv;
 
 public class HandlerService implements Runnable{
     
@@ -13,10 +17,15 @@ public class HandlerService implements Runnable{
     public HandlerService(VideoRepository videoRepository) {
         this.videoRepository = videoRepository;
     }
+
+    Dotenv dotenv = Dotenv.configure().load();
+
+    String hostname = dotenv.get("REDIS_HOST");
+    int port = Integer.parseInt(dotenv.get("REDIS_PORT"));
     
     public void run() {
         
-        Jedis jedis = new JedisPool("localhost", 6379).getResource();
+        Jedis jedis = new JedisPool(hostname, port).getResource();
 
         while (true) {
             String message = jedis.brpop(0, "ffmpeg_response_channel").get(1);

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,8 @@ import com.example.videoupload.model.Video;
 import com.example.videoupload.repository.VideoRepository;
 import com.example.videoupload.service.PresignedService;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 @RestController
 public class PresignedController {
 
@@ -28,7 +31,12 @@ public class PresignedController {
     @Autowired
     VideoRepository videoRepository;
 
-    Jedis jedis = new Jedis("localhost", 6379);
+    Dotenv dotenv = Dotenv.configure().load();
+
+	String hostname = dotenv.get("REDIS_HOST");
+	int port = Integer.parseInt(dotenv.get("REDIS_PORT"));
+
+    Jedis jedis = new Jedis(hostname, port);
 
     @CrossOrigin(origins = "http://localhost:3000")
     @GetMapping("/presigned")
@@ -64,7 +72,7 @@ public class PresignedController {
     @CrossOrigin(origins = "http://localhost:3000")
     @GetMapping("/playlist")
     public ResponseEntity<List<Video>> getPlaylist() {
-        
+
         return ResponseEntity.ok(videoRepository.findByStatus("200"));
     }
 }

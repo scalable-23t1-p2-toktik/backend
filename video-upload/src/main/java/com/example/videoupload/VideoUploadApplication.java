@@ -9,6 +9,4 @@ public class VideoUploadApplication {
 		SpringApplication.run(VideoUploadApplication.class, args);
 	}
 
-	
-
 }
