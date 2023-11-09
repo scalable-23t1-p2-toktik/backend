@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.model.S3Object;
+import com.example.videoupload.service.VideoInteractionService;
 import com.example.videoupload.service.VideoStreamService;
 
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
@@ -25,6 +26,9 @@ public class VideoStreamController {
 
     @Autowired
     VideoStreamService videoStreamService;
+
+    @Autowired
+    VideoInteractionService videoInteractionService;
 
     @CrossOrigin
     @GetMapping("/getPresigned/{key}")
@@ -89,6 +93,8 @@ public class VideoStreamController {
                 e.printStackTrace();
             }
         };
+
+        videoInteractionService.increaseViewCount(key);
 
         return ResponseEntity.ok().body(responseBody);
     }
