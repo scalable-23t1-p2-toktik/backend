@@ -1,6 +1,8 @@
 package com.example.videoupload.controller;
 
-import java.io.File;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +12,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.services.s3.model.S3Object;
 import com.example.videoupload.service.VideoStreamService;
 
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
@@ -63,66 +67,30 @@ public class VideoStreamController {
 
     @CrossOrigin(origins = "http://localhost:3000")
     @GetMapping("/stream/{key}")
-    public ResponseEntity<String> getStream(@PathVariable String key) {
-        try {
-            S3TransferManager transferManager = S3TransferManager.create();
+    public ResponseEntity<StreamingResponseBody> readFile(@PathVariable String key) {
 
-            // Download the M3U8 file from S3 to a temp folder
-            Long contentLength = downloadM3u8File(transferManager, key);
-            if (contentLength == null) {
-                return ResponseEntity.status(500).body("Error occurred during file download.");
+        StreamingResponseBody responseBody = outputStream -> {
+            try {
+                S3Object data = videoStreamService.readFile(key);
+
+                try (InputStream objectData = data.getObjectContent();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(objectData, "UTF-8"))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.contains(".ts")) {
+                            String preSignedUrl = videoStreamService.getPresignUrl("hls/" + key + "/" + line).toString();
+                            line = preSignedUrl; 
+                        }
+                        outputStream.write(line.getBytes("UTF-8"));
+                        outputStream.write("\n".getBytes("UTF-8"));
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+        };
 
-            // Modify the M3U8 file by getting the presigned url of the chuncks
-            boolean modificationResult = modifyM3u8File(key);
-            if (!modificationResult) {
-                return ResponseEntity.status(500).body("Error occurred during file modification.");
-            }
-
-            // Upload the modified M3U8 file back to S3
-            String uploadResult = uploadModifiedM3u8File(transferManager, key);
-            if (uploadResult == null) {
-                return ResponseEntity.status(500).body("Error occurred during file upload.");
-            }
-
-            // Delete the m3u8 file from the temp folder
-            boolean deletionResult = deleteM3u8File(key);
-            if (!deletionResult) {
-                return ResponseEntity.status(500).body("Error occurred while deleting the file.");
-            }
-
-            // Return the presigned url of the modified m3u8 file
-            String result = videoStreamService.getPresignUrl("playlist.m3u8").toString();
-
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("An unexpected error occurred.");
-        }
-    }
-
-    // TODO: Parse in the UUID name of the folder of the chuncks (Still hard coded)
-    private Long downloadM3u8File(S3TransferManager transferManager, String key) {
-        return videoStreamService.downloadFile(transferManager, "toktik-bucket", "hls/" + key + "/playlist.m3u8", "playlist/playlist.m3u8");
-    }
-
-    private boolean modifyM3u8File(String key) {
-        try {
-            videoStreamService.modifyM3u8("playlist/playlist.m3u8", key);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    private String uploadModifiedM3u8File(S3TransferManager transferManager, String key) {
-        return videoStreamService.uploadFile(transferManager, "toktik-bucket", "playlist.m3u8", "playlist/playlist.m3u8");
-    }
-
-    private boolean deleteM3u8File(String key) {
-        File file = new File("playlist/playlist.m3u8");
-        return file.delete();
+        return ResponseEntity.ok().body(responseBody);
     }
 
     @CrossOrigin(origins = "http://localhost:3000")

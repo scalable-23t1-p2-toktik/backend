@@ -3,8 +3,6 @@ package com.example.videoupload.service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import org.springframework.beans.factory.annotation.Value;
-
 import com.example.videoupload.model.Video;
 import com.example.videoupload.repository.VideoRepository;
 

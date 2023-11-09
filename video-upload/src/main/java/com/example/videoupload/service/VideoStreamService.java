@@ -12,9 +12,12 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
 import software.amazon.awssdk.transfer.s3.model.CompletedFileDownload;
@@ -85,7 +88,6 @@ public class VideoStreamService {
             while ((line = reader.readLine()) != null) {
                 if (line.endsWith(".ts")) {
                     // Get a presigned url for the chunks and replace it with the original chunk name
-                    // TODO: Parse in the name of the UUID folder of the chunks (Still hard coded)
                     String presigned = getPresignUrl("hls/" + key + "/" + line).toString();
                     line = presigned;
 
@@ -105,4 +107,14 @@ public class VideoStreamService {
             e.printStackTrace();
         }
     }
+
+    public S3Object readFile(String key) {
+        AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
+
+        GetObjectRequest getObjectRequest = new GetObjectRequest("toktik-bucket", "hls/" + key + "/playlist.m3u8");
+        S3Object s3Object = s3Client.getObject(getObjectRequest);
+
+        return s3Object;
+    }
+
 }
