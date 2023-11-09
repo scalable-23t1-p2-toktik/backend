@@ -26,7 +26,7 @@ public class VideoStreamController {
     @Autowired
     VideoStreamService videoStreamService;
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin
     @GetMapping("/getPresigned/{key}")
     public ResponseEntity<URL> getPresignedUrl(@PathVariable String key) {
         try {
@@ -39,7 +39,7 @@ public class VideoStreamController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin
     @GetMapping("/download/{key}")
     public ResponseEntity<String> download(@PathVariable String key) {
         S3TransferManager transferManager = S3TransferManager.create();
@@ -52,7 +52,7 @@ public class VideoStreamController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin
     @PutMapping("/upload/{key}")
     public ResponseEntity<String> upload(@PathVariable String key) {
         S3TransferManager transferManager = S3TransferManager.create();
@@ -65,7 +65,7 @@ public class VideoStreamController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin
     @GetMapping("/stream/{key}")
     public ResponseEntity<StreamingResponseBody> readFile(@PathVariable String key) {
 
@@ -93,7 +93,7 @@ public class VideoStreamController {
         return ResponseEntity.ok().body(responseBody);
     }
 
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin
     @GetMapping("/thumbnail/{key}")
     public ResponseEntity<String> getThumbnail(@PathVariable String key) {
 
