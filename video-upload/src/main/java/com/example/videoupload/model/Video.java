@@ -6,6 +6,7 @@ import java.util.List;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -34,6 +35,15 @@ public class Video {
     @CollectionTable(name = "video_likes", joinColumns = @JoinColumn(name = "video_id"))
     @Column(name = "like_username")
     private List<String> likes = new ArrayList<>();
+
+    @ElementCollection
+    @Embedded
+    private List<Comment> comments = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "video_vip", joinColumns = @JoinColumn(name = "video_id"))
+    @Column(name = "vip_username")
+    private List<String> vip = new ArrayList<>();
 
     public Video() {}
 
