@@ -7,11 +7,7 @@ import java.net.URL;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.amazonaws.AmazonServiceException;
@@ -21,6 +17,7 @@ import com.example.videoupload.service.VideoStreamService;
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
 
 @RestController
+@RequestMapping("backend")
 public class VideoStreamController {
 
     @Autowired
