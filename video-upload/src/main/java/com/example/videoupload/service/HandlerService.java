@@ -3,6 +3,8 @@ package com.example.videoupload.service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.util.List;
+
 import com.example.videoupload.model.Video;
 import com.example.videoupload.repository.VideoRepository;
 
@@ -11,6 +13,8 @@ import io.github.cdimascio.dotenv.Dotenv;
 public class HandlerService implements Runnable{
     
     private VideoRepository videoRepository;
+
+    private VideoInteractionService videoInteractionService;
 
     public HandlerService(VideoRepository videoRepository) {
         this.videoRepository = videoRepository;
@@ -32,7 +36,7 @@ public class HandlerService implements Runnable{
             try {
                 String[] splitted = message.split(":");
                 String status = splitted[0];
-                // String username = splitted[1];
+                String username = splitted[1];
                 String directory = splitted[2];
                 
                 if (status.equals("200")) {
@@ -41,6 +45,12 @@ public class HandlerService implements Runnable{
                     // System.out.println(videoUUID);
                     Video completedVideo = videoRepository.findByUuidName(videoUUID);
                     completedVideo.setStatus(status);
+
+                    // The owner of the video is by default a vip
+                    List<String> vips = completedVideo.getVip();
+                    vips.add(username);
+                    completedVideo.setVip(vips);
+
                     videoRepository.save(completedVideo);
                 }
 

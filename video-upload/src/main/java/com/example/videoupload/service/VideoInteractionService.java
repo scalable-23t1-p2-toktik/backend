@@ -1,6 +1,7 @@
 package com.example.videoupload.service;
 
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,8 @@ public class VideoInteractionService {
             return;
         }
 
+        addVip(username, videoUUID);
+
         likes.add(username);
         getVideo.setLikes(likes);
         videoRepository.save(getVideo);
@@ -32,11 +35,19 @@ public class VideoInteractionService {
     public void removeLike(String username, String videoUUID) {
         Video getVideo = videoRepository.findByUuidName(videoUUID);
         List<String> likes = getVideo.getLikes();
+        List<Comment> comments = getVideo.getComments();
 
         if (likes.contains(username)) {
             likes.remove(username);
         } else {
             return;
+        }
+        
+        // Check whether the user has a comment
+        boolean hasCommentWithUsername = comments.stream().anyMatch(comment -> comment.getUsername().equals(username));
+        // Remove from vip if not
+        if (!hasCommentWithUsername) {
+            removeVip(username, videoUUID);
         }
 
         getVideo.setLikes(likes);
@@ -57,24 +68,70 @@ public class VideoInteractionService {
         comment.setText(text);
         comment.setDateTime(LocalDateTime.now());
 
+        addVip(username, videoUUID);
+
         getVideo.getComments().add(comment);
         videoRepository.save(getVideo);
     }
 
     public void removeComment(String username, String videoUUID, String text) {
         Video getVideo = videoRepository.findByUuidName(videoUUID);
-        List<Comment> userComments = getVideo.getComments();
-        Comment comment = new Comment();
+        List<String> likes = getVideo.getLikes();
+        Iterator<Comment> iterator = getVideo.getComments().listIterator();
 
-        for (Comment comments : userComments) {
-            if (comments.getText().equals(text)) {  
-                comment = comments;
+        while (iterator.hasNext()) {
+            Comment comment = iterator.next();
+            if (comment.getText().equals(text) && comment.getUsername().equals(username)) {
+                iterator.remove();
                 break;
             }
         }
-
-        userComments.remove(comment);
+        // Check whether the user is in like list and remove if they're not
+        if (!likes.contains(username)) {
+            removeVip(username, videoUUID);
+        }
 
         videoRepository.save(getVideo);
+    }
+
+    public void addVip(String username, String videoUUID) {
+        Video getVideo = videoRepository.findByUuidName(videoUUID);
+        List<String> vips = getVideo.getVip();
+
+        if (getVideo.getUsername().equals(username)) {
+            return;
+        }
+
+        if (!vips.contains(username)) {
+            vips.add(username);
+            getVideo.setVip(vips);
+        } else {
+            return;
+        }
+
+        videoRepository.save(getVideo);
+    }
+
+    public void removeVip(String username, String videoUUID) {
+        Video getVideo = videoRepository.findByUuidName(videoUUID);
+        List<String> vips = getVideo.getVip();
+
+        if (getVideo.getUsername().equals(username)) {
+            return;
+        }
+
+        if (vips.contains(username)) {
+            vips.remove(username);
+            getVideo.setVip(vips);
+        } else {
+            return;
+        }
+
+        videoRepository.save(getVideo);
+    }
+
+    public void removeVideo(String videoUUID) {
+        Video getVideo = videoRepository.findByUuidName(videoUUID);
+        videoRepository.delete(getVideo);
     }
 }

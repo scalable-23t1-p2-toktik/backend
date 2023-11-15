@@ -8,6 +8,7 @@ import java.net.URL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -29,7 +30,7 @@ public class VideoStreamController {
 
     @Autowired
     VideoInteractionService videoInteractionService;
-
+    
     @CrossOrigin
     @GetMapping("/getPresigned/{key}")
     public ResponseEntity<URL> getPresignedUrl(@PathVariable String key) {
@@ -71,7 +72,7 @@ public class VideoStreamController {
 
     @CrossOrigin
     @GetMapping("/stream/{key}")
-    public ResponseEntity<StreamingResponseBody> readFile(@PathVariable String key) {
+    public ResponseEntity<StreamingResponseBody> streamVideo(@PathVariable String key) {
 
         StreamingResponseBody responseBody = outputStream -> {
             try {
@@ -104,6 +105,13 @@ public class VideoStreamController {
     public ResponseEntity<String> getThumbnail(@PathVariable String key) {
 
         return ResponseEntity.ok(videoStreamService.getPresignUrl("hls/" + key + "/thumbnail.jpg").toString());
+    }
+
+    @CrossOrigin
+    @DeleteMapping("/removeVideo/{key}")
+    public ResponseEntity<String> removeVideo(@PathVariable String key) {
+        videoInteractionService.removeVideo(key);
+        return ResponseEntity.ok("Successfully removed video: " + key);
     }
 
 }
