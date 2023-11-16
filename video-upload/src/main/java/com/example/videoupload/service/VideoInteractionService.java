@@ -11,6 +11,9 @@ import com.example.videoupload.model.Comment;
 import com.example.videoupload.model.Video;
 import com.example.videoupload.repository.VideoRepository;
 
+import io.github.cdimascio.dotenv.Dotenv;
+import redis.clients.jedis.Jedis;
+
 @Service
 public class VideoInteractionService {
 
@@ -25,6 +28,15 @@ public class VideoInteractionService {
             return;
         }
 
+        // Send notification on like
+        List<String> vips = getVideo.getVip();
+        for (String vip : vips) {
+            if (vip.equals(username)) {
+                continue;
+            }
+            sendLikeNotification(vip, username, videoUUID);   
+        }
+        
         addVip(username, videoUUID);
 
         likes.add(username);
@@ -68,6 +80,15 @@ public class VideoInteractionService {
         comment.setText(text);
         comment.setDateTime(LocalDateTime.now());
 
+        // Send comment notification
+        List<String> vips = getVideo.getVip();
+        for (String vip : vips) {
+            if (vip.equals(username)) {
+                continue;
+            }
+            sendCommentNotification(vip, username, videoUUID, text);
+        }
+
         addVip(username, videoUUID);
 
         getVideo.getComments().add(comment);
@@ -86,7 +107,7 @@ public class VideoInteractionService {
                 break;
             }
         }
-        // Check whether the user is in like list and remove if they're not
+        // Check whether the user is in like list and remove from vip if they're not
         if (!likes.contains(username)) {
             removeVip(username, videoUUID);
         }
@@ -130,8 +151,42 @@ public class VideoInteractionService {
         videoRepository.save(getVideo);
     }
 
+    // TODO: remove from the S3 bucket too
     public void removeVideo(String videoUUID) {
         Video getVideo = videoRepository.findByUuidName(videoUUID);
         videoRepository.delete(getVideo);
+    }
+
+    Dotenv dotenv = Dotenv.configure().load();
+
+	String hostname = dotenv.get("REDIS_HOST");
+	int port = Integer.parseInt(dotenv.get("REDIS_PORT"));
+
+    Jedis jedis = new Jedis(hostname, port);
+
+    // Handle like notification
+    public void sendLikeNotification(String vip, String username, String videoUUID) {
+        try {
+            Video getVideo = videoRepository.findByUuidName(videoUUID);
+            String message = "like:" + vip + ":" + username + ":" + getVideo.getOriginalName();
+            jedis.lpush(vip + "-notification", message);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            jedis.close();
+        }
+    }
+
+    // Handle comment notification
+    public void sendCommentNotification(String vip, String username, String videoUUID, String text) {
+        try {
+            Video getVideo = videoRepository.findByUuidName(videoUUID);
+            String message = "comment:" + vip + ":" + username + ":" + text + ":" + getVideo.getOriginalName();
+            jedis.lpush(vip + "-notification", message);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            jedis.close();
+        }
     }
 }
