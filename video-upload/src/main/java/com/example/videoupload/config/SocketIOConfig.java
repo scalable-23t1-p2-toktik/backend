@@ -10,16 +10,21 @@ import jakarta.annotation.PreDestroy;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+import io.github.cdimascio.dotenv.Dotenv;
 
 @Component
 public class SocketIOConfig {
-
+	
     private SocketIOServer server;
-    
+	
+    Dotenv dotenv = Dotenv.configure().load();
+
+    String hostname = dotenv.get("SOCKET_IO_HOSTNAME");
+	
     @Bean
     public SocketIOServer socketIOServer() {
         Configuration config = new Configuration();
-        config.setHostname("localhost");
+        config.setHostname(hostname);
         config.setPort(8082);
         server = new SocketIOServer(config);
         server.start();
