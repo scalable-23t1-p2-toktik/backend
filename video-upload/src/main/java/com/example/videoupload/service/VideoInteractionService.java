@@ -8,8 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.videoupload.model.Comment;
+import com.example.videoupload.model.Notification;
+import com.example.videoupload.model.NotificationMessage;
 import com.example.videoupload.model.Video;
+import com.example.videoupload.repository.NotificationRepository;
 import com.example.videoupload.repository.VideoRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import redis.clients.jedis.Jedis;
@@ -18,7 +22,13 @@ import redis.clients.jedis.Jedis;
 public class VideoInteractionService {
 
     @Autowired
+    ObjectMapper objectMapper;
+
+    @Autowired
     VideoRepository videoRepository;
+
+    @Autowired
+    NotificationRepository notificationRepository;
     
     public void addLike(String username, String videoUUID) {
         Video getVideo = videoRepository.findByUuidName(videoUUID);
@@ -168,8 +178,17 @@ public class VideoInteractionService {
     public void sendLikeNotification(String vip, String username, String videoUUID) {
         try {
             Video getVideo = videoRepository.findByUuidName(videoUUID);
-            String message = "like:" + vip + ":" + username + ":" + getVideo.getOriginalName();
-            jedis.lpush(vip + "-notification", message);
+            String likeMessage = username + " has liked " + getVideo.getOriginalName();
+
+            // add notification to database
+            Notification notification = new Notification(vip, likeMessage, false);
+            Long getId = notificationRepository.save(notification).getId();
+
+            NotificationMessage notificationMessage = new NotificationMessage(getId, likeMessage);
+            String message = objectMapper.writeValueAsString(notificationMessage);
+
+            // jedis.lpush(vip + "-notification", message);
+            jedis.publish(vip + "-notification", message);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -181,8 +200,51 @@ public class VideoInteractionService {
     public void sendCommentNotification(String vip, String username, String videoUUID, String text) {
         try {
             Video getVideo = videoRepository.findByUuidName(videoUUID);
-            String message = "comment:" + vip + ":" + username + ":" + text + ":" + getVideo.getOriginalName();
-            jedis.lpush(vip + "-notification", message);
+            String commentMessage = username + " has commented: " + text + ", in " + getVideo.getOriginalName();
+
+            // add notification to the database
+            Notification notification = new Notification(vip, commentMessage, false);
+            Long getId = notificationRepository.save(notification).getId();
+
+            NotificationMessage notificationMessage = new NotificationMessage(getId, commentMessage);
+            String message = objectMapper.writeValueAsString(notificationMessage);
+
+            // jedis.lpush(vip + "-notification", message);
+            jedis.publish(vip + "-notification", message);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            jedis.close();
+        }
+    }
+
+    // Change is_read to true
+    public void readNotification(Long id) {
+        Notification getNotification = notificationRepository.findById(id).get();
+        getNotification.set_read(true);
+        notificationRepository.save(getNotification);
+    }
+
+    public List<Notification> getNotifications(String username) {
+        List<Notification> getNotification = notificationRepository.findByUsername(username);
+
+        // Handles when user open all notification, to set all the notifcationsto read
+        for (Notification notification : getNotification) {
+            readNotification(notification.getId());
+        }
+
+        return getNotification;
+    }
+
+    public void getUnReadNotifications(String username) {
+        try {
+            List<Notification> getNotifications = notificationRepository.findByUsernameAndStatus(username);
+            for (Notification notification : getNotifications) {
+                NotificationMessage notificationMessage = new NotificationMessage(notification.getId(), notification.getText());
+                String message = objectMapper.writeValueAsString(notificationMessage);
+
+                jedis.publish(username + "-notification", message);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
